@@ -1,0 +1,20 @@
+# ******* project, board and chip name *******
+PROJECT = matrix8x8
+
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 85
+
+# ******* design files *******
+CONSTRAINTS = constraints/ulx3s_v20.lpf
+TOP_MODULE = top
+TOP_MODULE_FILE = top/$(TOP_MODULE).sv
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+
+YOSYS_OPTIONS = -abc9
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+include trellis_path.mk
+include trellis_main.mk
