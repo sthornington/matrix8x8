@@ -9,7 +9,7 @@ module matrix
    output wire      matrix_clk,
    output wire      matrix_latch, // labelled CE on my PCB
    output wire      matrix_mosi
-   )
+   );
 
    localparam        SERIAL_CLOCK_COUNTER_BITS_FAST = 2;
    localparam        SERIAL_CLOCK_COUNTER_BITS_MEDIUM = 12;
@@ -33,7 +33,6 @@ module matrix
           serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_MEDIUM-1];
         2'b10:
           serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_SLOW-1];
-        2'b00:
         default:
           serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_FAST-1];
       endcase
