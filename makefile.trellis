@@ -12,6 +12,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).sv
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
+  top/matrix.sv
 
 YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail
