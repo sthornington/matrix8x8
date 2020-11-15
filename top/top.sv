@@ -24,7 +24,9 @@ module top
    output wire       wifi_gpio0
    );
 
-   localparam        SERIAL_CLOCK_COUNTER_BITS = 15;
+   localparam        SERIAL_CLOCK_COUNTER_BITS_FAST = 2;
+   localparam        SERIAL_CLOCK_COUNTER_BITS_MEDIUM = 12;
+   localparam        SERIAL_CLOCK_COUNTER_BITS_SLOW = 16;
    logic             reset;
    wire              clk = clk_25mhz;
 
@@ -54,9 +56,25 @@ module top
    assign oled_csn  = wifi_gpio17;
    assign oled_resn = wifi_gpio25;
 
-   logic [SERIAL_CLOCK_COUNTER_BITS-1:0] counter;
-   logic                                 serial_clk;
-   logic                                 prev_serial_clk;
+   logic [SERIAL_CLOCK_COUNTER_BITS_SLOW-1:0] counter;
+   logic                                      serial_clk;
+   logic                                      prev_serial_clk;
+
+   // if true, do a fast scan, otherwise scan slow enough to be visible
+   enum                                       { SLOW, MEDIUM, FAST } mode;
+
+   initial mode = FAST;
+
+   always_comb
+     if (btn[1])
+       mode = MEDIUM;
+     else begin
+        if (btn[2])
+          mode = SLOW;
+        else
+          mode = FAST;
+     end
+
 
    // set up the counter for the serial clock
    always_ff @(posedge clk)
@@ -66,15 +84,19 @@ module top
    always_ff @(posedge clk) begin
       // this could be combinational
       prev_serial_clk <= serial_clk;
-      serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS-1];
+      case (mode)
+        FAST: serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_FAST-1];
+        MEDIUM: serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_MEDIUM-1];
+        SLOW: serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_SLOW-1];
+      endcase
    end
 
    logic serial_posedge;
    logic serial_negedge;
 
    always_comb begin
-      serial_posedge = serial_clk == 1'b1 && prev_serial_clk == 1'b0;
-      serial_negedge = serial_clk == 1'b0 && prev_serial_clk == 1'b1;
+      serial_posedge = prev_serial_clk == 1'b0 && serial_clk == 1'b1;
+      serial_negedge = prev_serial_clk == 1'b1 && serial_clk == 1'b0;
    end
 
    // we need to constantly scan through:
@@ -86,93 +108,133 @@ module top
    // lower latch/clock-enable
    // ...
    // repeat that for each row
-   enum bit[6:0] {
-                RESET     = 7'b0000001,
-                RED       = 7'b0000010,
-                BLUE      = 7'b0000100,
-                GREEN     = 7'b0001000,
-                ROW_ANODE = 7'b0010000,
-                LATCH     = 7'b0100000,
-                PAUSE     = 7'b1000000} r_state;
+   typedef enum bit[2:0] { RESET, RED, BLUE, GREEN, ROW_ANODE, LATCH, PAUSE } state_t;
+   state_t r_state;
+   state_t r_prev_state;
 
    logic [2:0] col_num = 0;
    logic [2:0] row_num = 0;
 
-   wire  matrix_clk = gp[0];
-   wire  matrix_ce = gp[1];
-   wire  matrix_mosi = gp[2];
+   // CLK is really the shift clock
+   wire  matrix_clk = gp[27];
+   // CE is really the output latch enable
+   wire  matrix_ce = gp[26];
+   // MOSI is the DS/shift data
+   wire  matrix_mosi = gp[25];
 
-//   wire  matrix_clk = gnp[0];
-//   wire  matrix_ce = gn[1];
-//   wire  matrix_mosi = gn[2];
-
+   logic   r_matrix_clk;
    logic   r_matrix_ce;
    logic   r_matrix_mosi;
 
    initial begin
       r_state = RESET;
+      r_prev_state = RESET;
+      r_matrix_clk = 0;
       r_matrix_ce = 0;
       r_matrix_mosi = 0;
    end
 
+   // loading data into shift register
+   logic loading = 0;
+
    always_comb
-     matrix_clk = serial_clk;
+     loading = r_prev_state == RESET ||
+               r_prev_state == RED ||
+               r_prev_state == BLUE ||
+               r_prev_state == GREEN ||
+               r_prev_state == ROW_ANODE;
 
-   assign led[0] = matrix_clk;
-   assign led[1] = matrix_ce;
-   assign led[7:2] = r_state[5:0];
+   // the shift clock is running whenever we are shifting data in
+   always_ff @(posedge clk) begin
+      r_matrix_clk <= loading && serial_clk;
+   end
 
-   logic [7:0] pause_counter = 0;
-   logic [7:0] reset_counter = 0;
+   // latching data into the output register data into shift register
+   logic latching = 0;
 
-   // catch the serial clk edge to work state
-   always_ff @(posedge clk)
-     // set up during negedge
+   always_comb
+     latching = r_prev_state == LATCH;
+
+   // the latch clock is running whenever we are latching the outputs
+   always_ff @(posedge clk) begin
+      r_matrix_ce <= latching && serial_clk;
+   end
+
+   always_comb begin
+      matrix_clk = r_matrix_clk;
+      matrix_ce = r_matrix_ce;
+      matrix_mosi = r_matrix_mosi;
+   end
+
+   logic [4:0] pause_counter = 0;
+   logic [4:0] reset_counter = 0;
+
+   logic [7:0] refresh_counter = 0;
+   logic [1:0] refresh_mod_3 = 0;
+
+   always_comb
+     refresh_mod_3 = refresh_counter % 3;
+
+   // catch the serial clk edge to run state
+   always_ff @(posedge clk) begin
+     // set up MOSI and change states after negedge
      if (serial_negedge) begin
+        r_prev_state <= r_state;
         case (r_state)
           RESET: begin
-             // unlatch/free
-             r_matrix_ce <= 1'b0;
              r_matrix_mosi <= 1'b1;
              reset_counter <= reset_counter + 1;
-             if (reset_counter == 8'hff)
-               r_state <= RED;
+             if (reset_counter == 5'd31)
+               r_state <= LATCH;
           end
           RED: begin
-             // unlatch/free
-             r_matrix_ce <= 1'b0;
-             r_matrix_mosi <= 1'b0;
+             // color is active-low
+             r_matrix_mosi <= ~(col_num[0] && (refresh_mod_3 == 2'b00));
              col_num <= col_num + 1;
              if (col_num == 3'b111) r_state <= BLUE;
           end
           BLUE: begin
-             r_matrix_mosi <= 1'b1;
+             r_matrix_mosi <=  ~(col_num[1] && (refresh_mod_3 == 2'b01));
              col_num <= col_num + 1;
              if (col_num == 3'b111) r_state <= GREEN;
           end
           GREEN: begin
-             r_matrix_mosi <= 1'b0;
+             r_matrix_mosi <=  ~(col_num[2] && (refresh_mod_3 == 2'b10));
              col_num <= col_num + 1;
              if (col_num == 3'b111) r_state <= ROW_ANODE;
           end
           ROW_ANODE: begin
-//             r_matrix_mosi <= (row_num == col_num);
-             r_matrix_mosi <= 1'b1;
+             r_matrix_mosi <= (row_num == col_num);
              col_num <= col_num + 1;
              if (col_num == 3'b111) begin
                 row_num <= row_num + 1;
-                // latch
-                r_matrix_ce <= 1'b1;
-                r_state <= RED;
+                r_state <= LATCH;
              end
+          end
+          LATCH: begin
+             // not really necessary since the shift clock will not fire next
+             r_matrix_mosi <= 1'b0;
+             r_state <= PAUSE;
           end
           PAUSE: begin
              // end of row
              pause_counter <= pause_counter + 1;
-             if (pause_counter == 8'hff)
-               r_state <= RED;
+             if (pause_counter == 5'hff) begin
+                r_state <= RED;
+                if (row_num == 3'b000)
+                  refresh_counter = refresh_counter + 1;
+             end
           end
         endcase
      end // if (serial_negedge)
+   end
+
+   assign led[0] = matrix_clk;
+   assign led[1] = matrix_ce;
+   assign led[2] = matrix_mosi;
+   assign led[3] = loading;
+   assign led[4] = 1'b0;
+   assign led[7:5] = r_state;
+
 
 endmodule
