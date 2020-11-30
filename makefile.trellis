@@ -8,14 +8,16 @@ FPGA_SIZE = 85
 # ******* design files *******
 CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = top
-TOP_MODULE_FILE = top/$(TOP_MODULE).sv
+TOP_MODULE_FILE = src/$(TOP_MODULE).sv
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  top/matrix.sv
+  src/mod3.sv \
+  src/matrix.sv
 
 YOSYS_OPTIONS = -abc9
-NEXTPNR_OPTIONS = --timing-allow-fail
+# YOSYS_OPTIONS =
+NEXTPNR_OPTIONS = --timing-allow-fail --placed-svg matrix-placed.svg --routed-svg matrix-routed.svg
 
 include trellis_path.mk
 include trellis_main.mk

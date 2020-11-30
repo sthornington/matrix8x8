@@ -108,10 +108,13 @@ module matrix
    logic [4:0] reset_counter = 0;
 
    logic [7:0] refresh_counter = 0;
-   logic [1:0] refresh_mod_3 = 0;
+   logic [1:0] refresh_mod_3;
 
-   always_comb
-     refresh_mod_3 = refresh_counter % 3;
+
+//   always_comb
+//     refresh_mod_3 = refresh_counter % 3;
+
+   syn_mod3_32 #(.WIDTH(8)) mod3(.in(refresh_counter), .out(refresh_mod_3));
 
    // catch the serial clk edge to run state
    always_ff @(posedge clk) begin
