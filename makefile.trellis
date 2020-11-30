@@ -4,6 +4,7 @@ PROJECT = matrix8x8
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 85
+#FPGA_SIZE = 12
 
 # ******* design files *******
 CONSTRAINTS = constraints/ulx3s_v20.lpf
@@ -13,11 +14,13 @@ TOP_MODULE_FILE = src/$(TOP_MODULE).sv
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   src/mod3.sv \
+  src/pll.v \
   src/matrix.sv
 
 YOSYS_OPTIONS = -abc9
 # YOSYS_OPTIONS =
-NEXTPNR_OPTIONS = --timing-allow-fail --placed-svg matrix-placed.svg --routed-svg matrix-routed.svg
+#NEXTPNR_OPTIONS = --timing-allow-fail --routed-svg arg
+NEXTPNR_OPTIONS =
 
 include trellis_path.mk
 include trellis_main.mk

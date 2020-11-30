@@ -4,7 +4,7 @@
 // like https://leeselectronic.com/en/product/18116.html
 module matrix
   (
-   input wire       clk_25mhz,
+   input wire       clk,
    input wire [1:0] refresh_speed,
    output wire      matrix_clk,
    output wire      matrix_latch, // labelled CE on my PCB
@@ -14,36 +14,45 @@ module matrix
    localparam        SERIAL_CLOCK_COUNTER_BITS_FAST = 2;
    localparam        SERIAL_CLOCK_COUNTER_BITS_MEDIUM = 12;
    localparam        SERIAL_CLOCK_COUNTER_BITS_SLOW = 16;
-   wire              clk = clk_25mhz;
 
-   logic [SERIAL_CLOCK_COUNTER_BITS_SLOW-1:0] counter;
-   logic                                      serial_clk;
-   logic                                      prev_serial_clk;
+   logic [SERIAL_CLOCK_COUNTER_BITS_SLOW-1:0] r_counter;
+   logic                                      r_serial_clk_a;
+   logic                                      r_serial_clk_b;
+   logic                                      r_serial_clk_c;
 
-   // set up the counter for the serial clock
+   // set up the r_counter for the serial clock
    always_ff @(posedge clk)
-      counter <= counter + 1;
+      r_counter <= r_counter + 1;
 
-   // calc serial_clk and previous
+   // calc r_serial_clk and previous
    always_ff @(posedge clk) begin
-      // this could be combinational
-      prev_serial_clk <= serial_clk;
       case (refresh_speed)
         2'b01:
-          serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_MEDIUM-1];
+          r_serial_clk_a <= r_counter[SERIAL_CLOCK_COUNTER_BITS_MEDIUM-1];
         2'b10:
-          serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_SLOW-1];
+          r_serial_clk_a <= r_counter[SERIAL_CLOCK_COUNTER_BITS_SLOW-1];
         default:
-          serial_clk <= counter[SERIAL_CLOCK_COUNTER_BITS_FAST-1];
+          r_serial_clk_a <= r_counter[SERIAL_CLOCK_COUNTER_BITS_FAST-1];
       endcase
-   end
+   end // always_ff @ (posedge clk)
 
-   logic serial_posedge;
-   logic serial_negedge;
+   always_ff @(posedge clk)
+     r_serial_clk_b <= r_serial_clk_a;
+
+   always_ff @(posedge clk)
+     r_serial_clk_c <= r_serial_clk_b;
+
+   logic                                      r_serial_clk;
+   // _a is to break a long wire, b is the real clock and c is it's prev
+   // value
+   assign r_serial_clk = r_serial_clk_b;
+
+   logic r_serial_posedge;
+   logic r_serial_negedge;
 
    always_comb begin
-      serial_posedge = prev_serial_clk == 1'b0 && serial_clk == 1'b1;
-      serial_negedge = prev_serial_clk == 1'b1 && serial_clk == 1'b0;
+      r_serial_posedge <= r_serial_clk_b == 1'b0 && r_serial_clk_c == 1'b1;
+      r_serial_negedge <= r_serial_clk_b == 1'b1 && r_serial_clk_c == 1'b0;
    end
 
    // the shift registers are 32 bits long,
@@ -58,8 +67,8 @@ module matrix
    state_t r_state;
    state_t r_prev_state;
 
-   logic [2:0] col_num = 0;
-   logic [2:0] row_num = 0;
+   logic [2:0] r_col_num = 0;
+   logic [2:0] r_row_num = 0;
    logic   r_matrix_clk;
    logic   r_matrix_latch;
    logic   r_matrix_mosi;
@@ -84,7 +93,7 @@ module matrix
 
    // the shift clock is running whenever we are shifting data in
    always_ff @(posedge clk) begin
-      r_matrix_clk <= loading && serial_clk;
+      r_matrix_clk <= loading && r_serial_clk;
    end
 
    // latching data into the output register data into shift register
@@ -95,7 +104,7 @@ module matrix
 
    // the latch clock is running whenever we are latching the outputs
    always_ff @(posedge clk) begin
-      r_matrix_latch <= latching && serial_clk;
+      r_matrix_latch <= latching && r_serial_clk;
    end
 
    always_comb begin
@@ -104,22 +113,25 @@ module matrix
       matrix_mosi = r_matrix_mosi;
    end
 
-   logic [4:0] pause_counter = 0;
+   logic [4:0] r_pause_counter = 0;
    logic [4:0] reset_counter = 0;
 
-   logic [7:0] refresh_counter = 0;
+   logic [7:0] r_refresh_counter = 0;
    logic [1:0] refresh_mod_3;
-
+   logic [1:0] r_refresh_mod_3;
 
 //   always_comb
-//     refresh_mod_3 = refresh_counter % 3;
+//     refresh_mod_3 = r_refresh_counter % 3;
 
-   syn_mod3_32 #(.WIDTH(8)) mod3(.in(refresh_counter), .out(refresh_mod_3));
+   syn_mod3_32 #(.WIDTH(8)) mod3(.in(r_refresh_counter), .out(refresh_mod_3));
+
+   always_ff @(posedge clk)
+     r_refresh_mod_3 <= refresh_mod_3;
 
    // catch the serial clk edge to run state
    always_ff @(posedge clk) begin
      // set up MOSI and change states after negedge
-     if (serial_negedge) begin
+     if (r_serial_negedge) begin
         r_prev_state <= r_state;
         case (r_state)
           RESET: begin
@@ -130,25 +142,25 @@ module matrix
           end
           RED: begin
              // color is active-low
-             r_matrix_mosi <= ~(col_num[0] && (refresh_mod_3 == 2'b00));
-             col_num <= col_num + 1;
-             if (col_num == 3'b111) r_state <= BLUE;
+             r_matrix_mosi <= ~(r_col_num[0] && (r_refresh_mod_3 == 2'b00));
+             r_col_num <= r_col_num + 1;
+             if (r_col_num == 3'b111) r_state <= BLUE;
           end
           BLUE: begin
-             r_matrix_mosi <=  ~(col_num[1] && (refresh_mod_3 == 2'b01));
-             col_num <= col_num + 1;
-             if (col_num == 3'b111) r_state <= GREEN;
+             r_matrix_mosi <=  ~(r_col_num[1] && (r_refresh_mod_3 == 2'b01));
+             r_col_num <= r_col_num + 1;
+             if (r_col_num == 3'b111) r_state <= GREEN;
           end
           GREEN: begin
-             r_matrix_mosi <=  ~(col_num[2] && (refresh_mod_3 == 2'b10));
-             col_num <= col_num + 1;
-             if (col_num == 3'b111) r_state <= ROW_ANODE;
+             r_matrix_mosi <=  ~(r_col_num[2] && (r_refresh_mod_3 == 2'b10));
+             r_col_num <= r_col_num + 1;
+             if (r_col_num == 3'b111) r_state <= ROW_ANODE;
           end
           ROW_ANODE: begin
-             r_matrix_mosi <= (row_num == col_num);
-             col_num <= col_num + 1;
-             if (col_num == 3'b111) begin
-                row_num <= row_num + 1;
+             r_matrix_mosi <= (r_row_num == r_col_num);
+             r_col_num <= r_col_num + 1;
+             if (r_col_num == 3'b111) begin
+                r_row_num <= r_row_num + 1;
                 r_state <= LATCH;
              end
           end
@@ -159,15 +171,15 @@ module matrix
           end
           PAUSE: begin
              // end of row
-             pause_counter <= pause_counter + 1;
-             if (pause_counter == 5'hff) begin
+             r_pause_counter <= r_pause_counter + 1;
+             if (r_pause_counter == 5'hff) begin
                 r_state <= RED;
-                if (row_num == 3'b000)
-                  refresh_counter = refresh_counter + 1;
+                if (r_row_num == 3'b000)
+                  r_refresh_counter <= r_refresh_counter + 1;
              end
           end
         endcase
-     end // if (serial_negedge)
+     end // if (r_serial_negedge)
    end
 
 endmodule

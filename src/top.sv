@@ -56,7 +56,14 @@ module top
    assign led[2] = matrix_mosi;
    assign led[7:3] = 0;
 
-   matrix matrix_0 ( clk_25mhz,
+   wire  clk_100mhz;
+   wire  locked;
+
+   pll pll_0 ( clk_25mhz,
+               clk_100mhz,
+               locked );
+
+   matrix matrix_0 ( clk_100mhz,
                      {btn[1], btn[2]},
                      matrix_clk,
                      matrix_latch,
