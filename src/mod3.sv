@@ -75,13 +75,6 @@ module syn_mod3_32 #( WIDTH=8 )
 
    assign out = digit_mod({m21, m20});
 
-   // synthesis translate_off
-   initial
-     begin
-        if (WIDTH > 32)
-          begin
-             $display("%t ERROR: Mod3 width must be <= 32 in %m",$realtime);
-          end
-     end
-   // synthesis translate_on
+   if (WIDTH > 32)
+     $error("%t ERROR: Mod3 width must be <= 32 in %m",$realtime);
 endmodule

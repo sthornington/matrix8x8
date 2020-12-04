@@ -63,13 +63,27 @@ module top
                clk_100mhz,
                locked );
 
-   matrix matrix_0 ( .clk(clk_100mhz),
-                     .reset(btn[3]),
-                     .refresh_speed({btn[1], btn[2]}),
-                     .matrix_clk,
-                     .matrix_latch,
-                     .matrix_mosi
-                    );
+   wire  matrix_wb_ack;
+   wire  matrix_wb_stall;
+   wire [31:0] matrix_wb_rdata;
 
+   matrix matrix_0
+     (
+       .clk(clk_100mhz),
+       .reset(btn[3]),
+       .i_refresh_speed({btn[1], btn[2]}),
+       .o_matrix_clk(matrix_clk),
+       .o_matrix_latch(matrix_latch),
+       .o_matrix_mosi(matrix_mosi),
+       .i_wb_cyc(0),
+       .i_wb_stb(0),
+       .i_wb_we(0),
+       .i_wb_addr(0),
+       .i_wb_sel(0),
+       .i_wb_wdata(0),
+       .o_wb_ack(matrix_wb_ack),
+       .o_wb_stall(matrix_wb_stall),
+       .o_wb_rdata(matrix_wb_rdata)
+       );
 
 endmodule
