@@ -63,11 +63,12 @@ module top
                clk_100mhz,
                locked );
 
-   matrix matrix_0 ( clk_100mhz,
-                     {btn[1], btn[2]},
-                     matrix_clk,
-                     matrix_latch,
-                     matrix_mosi
+   matrix matrix_0 ( .clk(clk_100mhz),
+                     .reset(btn[3]),
+                     .refresh_speed({btn[1], btn[2]}),
+                     .matrix_clk,
+                     .matrix_latch,
+                     .matrix_mosi
                     );
 
 

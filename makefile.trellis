@@ -14,8 +14,9 @@ TOP_MODULE_FILE = src/$(TOP_MODULE).sv
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   src/mod3.sv \
-  src/pll.v \
-  src/matrix.sv
+  src/matrix.sv \
+  src/bram.sv \
+  src/pll.v
 
 YOSYS_OPTIONS = -abc9
 # YOSYS_OPTIONS =
