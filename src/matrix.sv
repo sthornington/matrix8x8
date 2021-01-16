@@ -5,7 +5,7 @@
 module matrix
   #(
     parameter WB_DATA_WIDTH = 32,
-    parameter REG_COUNT = 8,
+    parameter REG_COUNT = 8, // this can't really be changed but informs the addr width
     parameter WB_ADDR_WIDTH = $clog2(REG_COUNT),
     parameter WB_SEL_WIDTH = WB_DATA_WIDTH / 8
     )
