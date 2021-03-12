@@ -51,6 +51,7 @@ module matrix
             for (i=0; i < WB_SEL_WIDTH; i=i+1)
               if (i_wb_sel[i])
                 memory[i_wb_addr][(i*8)+7:i*8] <= i_wb_wdata[(i*8)+7:i*8];
+
          end
          else
            r_rdata <= memory[i_wb_addr];
@@ -58,10 +59,11 @@ module matrix
          r_ack <= 1'b1;
       end
       if (reset) begin
+         for (i=0;i<REG_COUNT;i++) begin
+           memory[i] <= 32'h66336633;
+         end
+
 /*
-         for (i=0;i<REG_COUNT;i++)
-           memory[i] <= 32'h00000000;
- */
          // hardcode a silly picture here until we implement the wishbone master
          memory[0] <= 32'h00666600;
          memory[1] <= 32'h06000060;
@@ -71,14 +73,14 @@ module matrix
          memory[5] <= 32'h60033006;
          memory[6] <= 32'h06000060;
          memory[7] <= 32'h00666600;
-
+*/
          r_rdata <= WB_DATA_WIDTH'd0;
          r_ack <= 1'b0;
       end
    end // always_ff @ (posedge clk)
 
    // this peripheral cannot stall
-   assign o_wb_stall = 1'b1;
+   assign o_wb_stall = 1'b0;
    assign o_wb_ack = r_ack;
    assign o_wb_rdata = r_rdata;
 
@@ -122,7 +124,7 @@ module matrix
    logic r_serial_posedge;
    logic r_serial_negedge;
 
-   always_comb begin
+   always_ff @(posedge clk) begin
       r_serial_posedge <= serial_clk_prev == 1'b0 && serial_clk == 1'b1;
       r_serial_negedge <= serial_clk_prev == 1'b1 && serial_clk == 1'b0;
    end
