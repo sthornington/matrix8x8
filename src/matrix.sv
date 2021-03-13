@@ -59,8 +59,9 @@ module matrix
          r_ack <= 1'b1;
       end
       if (reset) begin
-         for (i=0;i<REG_COUNT;i++) begin
-           memory[i] <= 32'h66336633;
+
+        for (i=0;i<REG_COUNT;i++) begin
+           memory[i] = 32'h66336633;
          end
 
 /*

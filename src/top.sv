@@ -78,23 +78,25 @@ module top
     wire             wb_stall;
     wire [31:0]      wb_rdata;
 
+    wire             clk;
+
+    // TODO: WHY WON"T THIS WORK AT 100MHZ?
+    assign clk = clk_25mhz;
     // BEGIN DEBOUNCE RESET
     wire             db_btn_reset_raw;
     wire             db_btn_reset;
 
-    debounce debounce_btn0(.clk(clk_100mhz),
+    debounce debounce_btn0(.clk(clk),
                            .i_btn(~btn[0]),
                            .o_btn(db_btn_reset_raw));
 
     assign db_btn_reset = db_btn_reset_raw || ~btn[0];
-
-//    assign db_btn_reset = ~btn[0];
-
     // END DEBOUNCE RESET
+
 
     matrix matrix_0
       (
-       .clk(clk_100mhz),
+       .clk(clk),
        .reset(db_btn_reset),
        .i_refresh_speed({btn[1], btn[2]}),
        .o_matrix_clk(matrix_clk),
@@ -114,11 +116,9 @@ module top
     wire             db_btn6;
 
 
-    debounce debounce_btn6(.clk(clk_100mhz),
+    debounce debounce_btn6(.clk(clk),
                            .i_btn(btn[6]),
                            .o_btn(db_btn6));
-
-//    assign db_btn6 = btn[6];
 
     wire             mm_pic_num;
 
@@ -127,7 +127,7 @@ module top
 
     move_master move_master_0
       (
-       .clk(clk_100mhz),
+       .clk(clk),
        .reset(db_btn_reset),
        .i_change(db_btn6),
        .o_pic_num(mm_pic_num),

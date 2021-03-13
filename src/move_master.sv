@@ -40,6 +40,9 @@ module move_master
     reg [3:0]                         r_load_num = 0;
 
     always_ff @(posedge clk) begin
+        if (beat && r_row == 7)
+            r_loading <= 0;
+
         if (i_change && !r_change) begin
             r_pic <= r_pic + 1;
             r_loading <= 1; // trigger a load
@@ -52,14 +55,16 @@ module move_master
     end
 
     assign o_pic_num = r_pic;
-    assign o_dbg = {3'b0, r_loading};
+    assign o_dbg = {r_loading, r_row};
+    assign o_wb_we = 1'b1;
 
     always_comb begin
-        o_wb_cyc = r_loading;
-        o_wb_stb = r_loading;
-        o_wb_we = r_loading;
-
-        if (reset) begin
+        if (!reset) begin
+            o_wb_cyc = r_loading;
+            o_wb_stb = r_loading;
+            o_wb_we = r_loading;
+        end else
+        begin
             o_wb_cyc = 1'b0;
             o_wb_stb = 1'b0;
             o_wb_we = 1'b0;
@@ -72,18 +77,13 @@ module move_master
     always_comb
       beat = o_wb_cyc && o_wb_stb && !i_wb_stall;
 
-    // did we get an ack.
-    // TODO can we pipe in more beats if we are
-    // behind on acks?
-    reg                               acked = 0;
-    always_comb
-      acked = o_wb_cyc && i_wb_ack;
-
+    // init to -1 so we load up 0
     reg [WB_ADDR_WIDTH-1:0]           r_row = 0;
+    logic [WB_ADDR_WIDTH-1:0]         next_row;
+
     // keep the address and data lines always populated with the data
     // and just roll the counter on beat
     always_comb begin
-        // always assign over the row
         o_wb_addr = r_row;
 
         // assign the correct data, don't worry about tearing
@@ -118,11 +118,9 @@ module move_master
     always_ff @(posedge clk) begin
         if (beat) begin
             r_row <= r_row + 1;
-            // if we just wrote the last row, stop the burst
-            // TODO: WHY DOES THIS FAIL?
-            //if (r_row == 7)
-            //  r_loading <= 1'b0;
         end
+        if (reset)
+          r_row <= 0;
     end
 
     assign o_wb_sel = ~0;
