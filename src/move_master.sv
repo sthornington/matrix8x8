@@ -94,8 +94,8 @@ module move_master
               1: o_wb_wdata = 32'h06000060;
               2: o_wb_wdata = 32'h60500506;
               3: o_wb_wdata = 32'h60000006;
-              4: o_wb_wdata = 32'h60300306;
-              5: o_wb_wdata = 32'h60033006;
+              4: o_wb_wdata = 32'h60033006;
+              5: o_wb_wdata = 32'h60300306;
               6: o_wb_wdata = 32'h06000060;
               7: o_wb_wdata = 32'h00666600;
             endcase

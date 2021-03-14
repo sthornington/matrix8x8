@@ -56,12 +56,26 @@ module top
     assign led[2] = matrix_mosi;
 //    assign led[7:4] = 0;
 
-    wire             clk_100mhz;
     wire             locked;
 
-    pll pll_0 ( clk_25mhz,
-                clk_100mhz,
-                locked );
+    wire [3:0]       clocks;
+    ecp5pll
+      #(
+        .in_hz(25000000),
+        .out0_hz( 75000000), .out0_deg(  0), .out0_tol_hz(0),
+        .out1_hz( 75000000), .out1_deg(  0), .out1_tol_hz(0),
+        .out2_hz( 75000000), .out2_deg(  0), .out2_tol_hz(0),
+        .out3_hz( 75000000), .out3_deg(  0), .out3_tol_hz(0)
+        )
+    ecp5pll_inst
+      (
+       .clk_i(clk_25mhz),
+       .clk_o(clocks)
+       );
+
+    // TODO: WHY WON"T THIS WORK AT 100MHZ?
+    wire             clk;
+    assign clk = clocks[3];
 
     // matrix is a wishbone slave, 4 bytes x 8 addresses. byte select supported.
     // [.RGB.RGB] [.RGB.RGB] [.RGB.RGB] [.RGB.RGB]
@@ -78,10 +92,7 @@ module top
     wire             wb_stall;
     wire [31:0]      wb_rdata;
 
-    wire             clk;
 
-    // TODO: WHY WON"T THIS WORK AT 100MHZ?
-    assign clk = clk_25mhz;
     // BEGIN DEBOUNCE RESET
     wire             db_btn_reset_raw;
     wire             db_btn_reset;
@@ -97,6 +108,7 @@ module top
     matrix matrix_0
       (
        .clk(clk),
+//       .reset(db_btn_reset),
        .reset(db_btn_reset),
        .i_refresh_speed({btn[1], btn[2]}),
        .o_matrix_clk(matrix_clk),
