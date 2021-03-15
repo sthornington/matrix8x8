@@ -57,7 +57,7 @@ module top
 //    assign led[7:4] = 0;
 
     wire             locked;
-
+/*
     wire [3:0]       clocks;
     ecp5pll
       #(
@@ -72,10 +72,11 @@ module top
        .clk_i(clk_25mhz),
        .clk_o(clocks)
        );
-
+*/
     // TODO: WHY WON"T THIS WORK AT 100MHZ?
     wire             clk;
-    assign clk = clocks[3];
+//    assign clk = clocks[3];
+    assign clk = clk_25mhz;
 
     // matrix is a wishbone slave, 4 bytes x 8 addresses. byte select supported.
     // [.RGB.RGB] [.RGB.RGB] [.RGB.RGB] [.RGB.RGB]
