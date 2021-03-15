@@ -78,7 +78,6 @@ module move_master
 
     // init to -1 so we load up 0
     reg [WB_ADDR_WIDTH-1:0]           r_row = 0;
-    logic [WB_ADDR_WIDTH-1:0]         next_row;
 
     // keep the address and data lines always populated with the data
     // and just roll the counter on beat

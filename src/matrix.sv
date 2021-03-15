@@ -144,7 +144,7 @@ module matrix
     // sufficient to drive many of the LEDs at the same time, so
     // if you try to paint a row with RGB all somewhat on, the blues
     // won't get enough power to light up.
-    typedef enum bit[6:0] { RESET=1, RED=2, BLUE=4, GREEN=8, ROW_ANODE=16, LATCH=32, PAUSE=64 } state_t;
+    typedef enum bit[2:0] { RESET, RED, BLUE, GREEN, ROW_ANODE, LATCH, PAUSE } state_t;
     state_t r_state;
     state_t r_prev_state;
 

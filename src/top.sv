@@ -51,12 +51,8 @@ module top
     // MOSI is the DS/shift data
     wire             matrix_mosi = gp[25];
 
-//    assign led[0] = matrix_clk;
-//    assign led[1] = matrix_latch;
-//    assign led[2] = matrix_mosi;
-//    assign led[7:4] = 0;
 
-    wire             locked;
+    wire             clk;
 /*
     wire [3:0]       clocks;
     ecp5pll
@@ -74,7 +70,6 @@ module top
        );
 */
     // TODO: WHY WON"T THIS WORK AT 100MHZ?
-    wire             clk;
 //    assign clk = clocks[3];
     assign clk = clk_25mhz;
 
@@ -105,11 +100,10 @@ module top
     assign db_btn_reset = db_btn_reset_raw || ~btn[0];
     // END DEBOUNCE RESET
 
-
+    /* why do we need noprune here? */
     matrix matrix_0
       (
        .clk(clk),
-//       .reset(db_btn_reset),
        .reset(db_btn_reset),
        .i_refresh_speed({btn[1], btn[2]}),
        .o_matrix_clk(matrix_clk),
@@ -124,7 +118,7 @@ module top
        .o_wb_ack(wb_ack),
        .o_wb_stall(wb_stall),
        .o_wb_rdata(wb_rdata)
-       );
+       ); /* synthesis syn_noprune=1 */
 
     wire             db_btn6;
 
@@ -156,6 +150,9 @@ module top
        .i_wb_rdata(wb_rdata)
        );
 
+    assign led[0] = matrix_clk;
+    assign led[1] = matrix_latch;
+    assign led[2] = matrix_mosi;
     assign led[3] = mm_pic_num;
     assign led[7:4] = mm_dbg;
 
