@@ -23,5 +23,6 @@ VERILOG_FILES = \
   src/mod3.sv \
   src/ecp5pll.sv
 
+include trellis_path.mk
 include diamond_path.mk
 include diamond_main.mk

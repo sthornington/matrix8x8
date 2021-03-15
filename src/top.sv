@@ -51,9 +51,9 @@ module top
     // MOSI is the DS/shift data
     wire             matrix_mosi = gp[25];
 
-    assign led[0] = matrix_clk;
-    assign led[1] = matrix_latch;
-    assign led[2] = matrix_mosi;
+//    assign led[0] = matrix_clk;
+//    assign led[1] = matrix_latch;
+//    assign led[2] = matrix_mosi;
 //    assign led[7:4] = 0;
 
     wire             locked;
@@ -65,7 +65,7 @@ module top
         .out0_hz( 75000000), .out0_deg(  0), .out0_tol_hz(0),
         .out1_hz( 75000000), .out1_deg(  0), .out1_tol_hz(0),
         .out2_hz( 75000000), .out2_deg(  0), .out2_tol_hz(0),
-        .out3_hz( 75000000), .out3_deg(  0), .out3_tol_hz(0)
+        .out3_hz(100000000), .out3_deg(  0), .out3_tol_hz(0)
         )
     ecp5pll_inst
       (

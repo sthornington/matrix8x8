@@ -40,6 +40,7 @@ module matrix
     reg [WB_DATA_WIDTH-1:0]           r_rdata = 0;
 
     integer                           i;
+    integer                           j;
 
     // handling the main read/write operations.
     always_ff @(posedge clk) begin
@@ -50,8 +51,9 @@ module matrix
                 // handle the byte-select here
                 for (i=0; i < WB_SEL_WIDTH; i=i+1)
                   if (i_wb_sel[i])
-                    memory[i_wb_addr][(i*8)+7:i*8] <= i_wb_wdata[(i*8)+7:i*8];
-
+                    // use bit-select to avoid diamond error about non-constant range bounds
+                    for (j=0;j<8;j++)
+                      memory[i_wb_addr][i*8+j] <= i_wb_wdata[i*8+j];
             end
             else
               r_rdata <= memory[i_wb_addr];
@@ -75,7 +77,7 @@ module matrix
              memory[6] <= 32'h06000060;
              memory[7] <= 32'h00666600;
              */
-            r_rdata <= WB_DATA_WIDTH'd0;
+            r_rdata <= 0;
             r_ack <= 1'b0;
         end
     end // always_ff @ (posedge clk)

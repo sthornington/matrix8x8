@@ -56,7 +56,6 @@ module move_master
 
     assign o_pic_num = r_pic;
     assign o_dbg = {r_loading, r_row};
-    assign o_wb_we = 1'b1;
 
     always_comb begin
         if (!reset) begin

@@ -149,13 +149,13 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).ldf: project.ldf ldf.xsl $(BOARD)_sram.xcf
 	  --stringparam FPGA_DEVICE $(FPGA_CHIP_UPPERCASE)-$(FPGA_PACKAGE_UPPERCASE) \
 	  --stringparam CONSTRAINTS_FILE $(CONSTRAINTS) \
 	  --stringparam STRATEGY_FILE $(STRATEGY) \
-	  --stringparam XCF_FILE $(SCRIPTS)/$(BOARD)_sram.xcf \
+	  --stringparam XCF_FILE $(BOARD)_sram.xcf \
 	  --stringparam TOP_MODULE $(TOP_MODULE) \
 	  --stringparam TOP_MODULE_FILE $(TOP_MODULE_FILE) \
 	  --stringparam VHDL_FILES "$(VHDL_FILES)" \
 	  --stringparam VERILOG_FILES "$(VERILOG_FILES)" \
 	  --stringparam SBX_FILES "$(SBX_FILES)" \
-	  $(SCRIPTS)/ldf.xsl $(SCRIPTS)/project.ldf > $@
+	  ldf.xsl project.ldf > $@
 
 project/project_project.bit: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).ldf $(VERILOG_FILES) $(VHDL_FILES)
 	echo prj_project open $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).ldf \; prj_run Export -task Bitgen | ${DIAMONDC}
@@ -176,12 +176,12 @@ $(CLK3_FILE_NAME):
 	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPLL) $(CLK3_OPTIONS) --file $@
 
 # generate sram programming XCF file for DDTCMD
-$(BOARD)_$(FPGA_SIZE)f.xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(SCRIPTS)/$(BOARD)_sram.xcf $(SCRIPTS)/xcf.xsl
+$(BOARD)_$(FPGA_SIZE)f.xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_sram.xcf xcf.xsl
 	xsltproc \
 	  --stringparam FPGA_CHIP $(FPGA_CHIP_UPPERCASE) \
 	  --stringparam CHIP_ID $(CHIP_ID) \
 	  --stringparam BITSTREAM_FILE $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit \
-	  $(SCRIPTS)/xcf.xsl $(SCRIPTS)/$(BOARD)_sram.xcf > $@
+	  xcf.xsl $(BOARD)_sram.xcf > $@
 
 # run DDTCMD to generate sram VME file
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme: $(BOARD)_$(FPGA_SIZE)f.xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
@@ -197,13 +197,13 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).b
 	-if $< -oft -int -quad $(FPGA_SPI) -of $@
 
 # generate flash programming XCF file for DDTCMD
-$(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(SCRIPTS)/$(BOARD)_flash_$(FLASH_CHIP).xcf $(SCRIPTS)/xcf.xsl
+$(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_flash_$(FLASH_CHIP).xcf xcf.xsl
 	xsltproc \
 	  --stringparam FPGA_CHIP $(FPGA_CHIP_UPPERCASE) \
 	  --stringparam CHIP_ID $(CHIP_ID) \
 	  --stringparam MASK_FILE $(MASK_PATH)/$(MASK_FILE) \
 	  --stringparam BITSTREAM_FILE $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs \
-	  $(SCRIPTS)/xcf.xsl $(SCRIPTS)/$(BOARD)_flash_$(FLASH_CHIP).xcf > $@
+	  xcf.xsl $(BOARD)_flash_$(FLASH_CHIP).xcf > $@
 
 # run DDTCMD to generate flash VME file
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme: $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
