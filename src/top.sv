@@ -2,26 +2,26 @@
 
 module top
   (
-   input wire        clk_25mhz,
-   input wire [6:0]  btn,
-   output wire [7:0] led,
-   inout wire [27:0] gp,gn,
-   output wire       oled_csn,
-   output wire       oled_clk,
-   output wire       oled_mosi,
-   output wire       oled_dc,
-   output wire       oled_resn,
-   input wire        ftdi_txd,
-   output wire       ftdi_rxd,
-   inout wire        sd_clk, sd_cmd,
-   inout wire [3:0]  sd_d,
-   output wire       wifi_en,
-   input wire        wifi_txd,
-   output wire       wifi_rxd,
-   input wire        wifi_gpio16,
-   input wire        wifi_gpio17,
-   //output wire wifi_gpio5,
-   output wire       wifi_gpio0
+   input        clk_25mhz,
+   input [6:0]  btn,
+   output [7:0] led,
+   inout [27:0] gp,gn,
+   output       oled_csn,
+   output       oled_clk,
+   output       oled_mosi,
+   output       oled_dc,
+   output       oled_resn,
+   input        ftdi_txd,
+   output       ftdi_rxd,
+   inout        sd_clk, sd_cmd,
+   inout [3:0]  sd_d,
+   output       wifi_en,
+   input        wifi_txd,
+   output       wifi_rxd,
+   input        wifi_gpio16,
+   input        wifi_gpio17,
+   //output wifi_gpio5,
+   output       wifi_gpio0
    );
 
     assign wifi_gpio0 = 1'b1;
@@ -33,8 +33,11 @@ module top
     assign ftdi_rxd = wifi_txd;
 
     // wifi aliasing for shared pinns
-    wire             wifi_gpio26 = gp[11];
-    wire             wifi_gpio25 = gn[11];
+    wire             wifi_gpio26;
+    wire             wifi_gpio25;
+
+    assign wifi_gpio26 = gp[11];
+    assign wifi_gpio25 = gn[11];
 
     // in simon's st7789 the wires are crossed physically in the
     // cable so that the labels on the PCB are still correct
@@ -45,33 +48,36 @@ module top
     assign oled_resn = wifi_gpio25;
 
     // CLK is really the shift clock
-    wire             matrix_clk = gp[27];
+    wire             matrix_clk;
     // CE is really the output latch enable
-    wire             matrix_latch = gp[26];
+    wire             matrix_latch;
     // MOSI is the DS/shift data
-    wire             matrix_mosi = gp[25];
+    wire             matrix_mosi;
 
+    assign gp[27] = matrix_clk;
+    assign gp[26] = matrix_latch;
+    assign gp[25] = matrix_mosi;
 
     wire             clk;
-/*
+
     wire [3:0]       clocks;
     ecp5pll
       #(
         .in_hz(25000000),
-        .out0_hz( 75000000), .out0_deg(  0), .out0_tol_hz(0),
-        .out1_hz( 75000000), .out1_deg(  0), .out1_tol_hz(0),
-        .out2_hz( 75000000), .out2_deg(  0), .out2_tol_hz(0),
-        .out3_hz(100000000), .out3_deg(  0), .out3_tol_hz(0)
+        .out0_hz( 50000000), .out0_deg(  0), .out0_tol_hz(0),
+        .out1_hz(100000000), .out1_deg(  0), .out1_tol_hz(0),
+        .out2_hz(150000000), .out2_deg(  0), .out2_tol_hz(0),
+        .out3_hz(200000000), .out3_deg(  0), .out3_tol_hz(0)
         )
     ecp5pll_inst
       (
        .clk_i(clk_25mhz),
        .clk_o(clocks)
        );
-*/
+
     // TODO: WHY WON"T THIS WORK AT 100MHZ?
-//    assign clk = clocks[3];
-    assign clk = clk_25mhz;
+    assign clk = clocks[2];
+//    assign clk = clk_25mhz;
 
     // matrix is a wishbone slave, 4 bytes x 8 addresses. byte select supported.
     // [.RGB.RGB] [.RGB.RGB] [.RGB.RGB] [.RGB.RGB]

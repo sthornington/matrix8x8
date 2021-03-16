@@ -7,6 +7,12 @@ LOCATE COMP "clk_25mhz" SITE "G2";
 IOBUF  PORT "clk_25mhz" PULLMODE=NONE IO_TYPE=LVCMOS33;
 FREQUENCY PORT "clk_25mhz" 25 MHZ;
 
+FREQUENCY PORT "ecp5pll_inst.clk_i" 25 MHZ;
+FREQUENCY PORT "clocks[0]" 50 MHZ;
+FREQUENCY PORT "clocks[1]" 100 MHZ;
+FREQUENCY PORT "clocks[2]" 150 MHZ;
+FREQUENCY PORT "clocks[3]" 200 MHZ;
+
 # JTAG and SPI FLASH voltage 3.3V and options to boot from SPI flash
 # write to FLASH possible any time from JTAG:
 SYSCONFIG CONFIG_IOVOLTAGE=3.3 COMPRESS_CONFIG=ON MCCLK_FREQ=62 SLAVE_SPI_PORT=DISABLE MASTER_SPI_PORT=ENABLE SLAVE_PARALLEL_PORT=DISABLE;
@@ -139,7 +145,7 @@ IOBUF  PORT "adc_sclk" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## Audio 4-bit DAC "analog", "gpio" sheet
 # 4-bit mode can drive down to 75 ohm load impedance.
-# Lower impedance leads to IO overload, 
+# Lower impedance leads to IO overload,
 # FPGA will stop working and need reboot.
 # For standard 17 ohm earphones on PCB v1.7:
 # use bits 2,3 as input (High-Z) and drive only bits 0,1.

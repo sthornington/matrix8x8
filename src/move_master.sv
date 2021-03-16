@@ -55,7 +55,7 @@ module move_master
     end
 
     assign o_pic_num = r_pic;
-    assign o_dbg = {r_loading, r_row};
+    assign o_dbg = {r_load_num};
 
     always_comb begin
         if (!reset) begin
@@ -76,7 +76,6 @@ module move_master
     always_comb
       beat = o_wb_cyc && o_wb_stb && !i_wb_stall;
 
-    // init to -1 so we load up 0
     reg [WB_ADDR_WIDTH-1:0]           r_row = 0;
 
     // keep the address and data lines always populated with the data
@@ -88,14 +87,14 @@ module move_master
         case (r_pic)
           1'b0:
             case (r_row)
-              0: o_wb_wdata = 32'h00666600;
-              1: o_wb_wdata = 32'h06000060;
-              2: o_wb_wdata = 32'h60500506;
-              3: o_wb_wdata = 32'h60000006;
-              4: o_wb_wdata = 32'h60033006;
-              5: o_wb_wdata = 32'h60300306;
-              6: o_wb_wdata = 32'h06000060;
-              7: o_wb_wdata = 32'h00666600;
+              0: o_wb_wdata = 32'h00000000;
+              1: o_wb_wdata = 32'h00500500;
+              2: o_wb_wdata = 32'h05455450;
+              3: o_wb_wdata = 32'h05444450;
+              4: o_wb_wdata = 32'h05444450;
+              5: o_wb_wdata = 32'h00544500;
+              6: o_wb_wdata = 32'h00055000;
+              7: o_wb_wdata = 32'h00000000;
             endcase
           1'b1:
             case (r_row)

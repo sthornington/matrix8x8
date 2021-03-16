@@ -35,7 +35,7 @@ module matrix
     // nibble-wise allocation to each RGB LED as 0bxRGB
     // so each row of 8x4bits will fit in a 32bit bus width,
     // and we have 8 rows
-    reg [WB_DATA_WIDTH-1:0]           memory [REG_COUNT-1:0];
+    reg [WB_DATA_WIDTH-1:0]           memory [REG_COUNT-1:0]; /* synthesis syn_preserve = 1 */
     reg                               r_ack = 0;
     reg [WB_DATA_WIDTH-1:0]           r_rdata = 0;
 
@@ -61,22 +61,15 @@ module matrix
             r_ack <= 1'b1;
         end
         if (reset) begin
-
-            for (i=0;i<REG_COUNT;i++) begin
-                memory[i] = 32'h66336633;
-            end
-
-            /*
-             // hardcode a silly picture here until we implement the wishbone master
-             memory[0] <= 32'h00666600;
-             memory[1] <= 32'h06000060;
-             memory[2] <= 32'h60500506;
-             memory[3] <= 32'h60000006;
-             memory[4] <= 32'h60300306;
-             memory[5] <= 32'h60033006;
-             memory[6] <= 32'h06000060;
-             memory[7] <= 32'h00666600;
-             */
+            // hardcode a test pattern
+            memory[0] <= 32'h60000001;
+            memory[1] <= 32'h06000010;
+            memory[2] <= 32'h00600100;
+            memory[3] <= 32'h00061000;
+            memory[4] <= 32'h00016000;
+            memory[5] <= 32'h00100600;
+            memory[6] <= 32'h01000060;
+            memory[7] <= 32'h10000000;
             r_rdata <= 0;
             r_ack <= 1'b0;
         end
@@ -117,8 +110,7 @@ module matrix
         endcase
     end // always_ff @ (posedge clk)
 
-    // we are trying to stagger the serial clock stages to gain some MHz, just
-    // for fun to try and break 100MHz (even though the matrix cannot handle that)
+    // we are trying to stagger the serial clock stages to gain some MHz
     logic serial_clk;
     assign serial_clk = r_serial_clk_prev;
     logic serial_clk_prev;
@@ -216,6 +208,7 @@ module matrix
 
 
     always_comb begin
+        current_word = memory[r_row_num];
         current_nibble = (current_word >> 4*(7-r_col_num)) & 4'hf;
         current_red = |(current_nibble & 4'b0100);
         current_green = |(current_nibble & 4'b0010);
@@ -265,7 +258,6 @@ module matrix
                   r_col_num <= r_col_num + 1;
                   if (r_col_num == 3'b111) begin
                       r_row_num <= r_row_num + 1;
-                      current_word = memory[r_row_num + 1];
                       r_state <= LATCH;
                   end
               end
@@ -292,7 +284,6 @@ module matrix
             r_matrix_mosi <= 1'b1;
             r_col_num <= 0;
             r_row_num <= 0;
-            current_word = memory[0];
             r_refresh_counter <= 0;
             r_reset_counter <= 0;
         end
