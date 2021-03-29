@@ -62,14 +62,14 @@ module matrix
         end
         if (reset) begin
             // hardcode a test pattern
-            memory[0] <= 32'h60000001;
-            memory[1] <= 32'h06000010;
-            memory[2] <= 32'h00600100;
-            memory[3] <= 32'h00061000;
-            memory[4] <= 32'h00016000;
-            memory[5] <= 32'h00100600;
-            memory[6] <= 32'h01000060;
-            memory[7] <= 32'h10000000;
+            memory[0] <= 32'h12345671;
+            memory[1] <= 32'h23456712;
+            memory[2] <= 32'h34567123;
+            memory[3] <= 32'h45671234;
+            memory[4] <= 32'h56712345;
+            memory[5] <= 32'h67123456;
+            memory[6] <= 32'h71234567;
+            memory[7] <= 32'h12345671;
             r_rdata <= 0;
             r_ack <= 1'b0;
         end
@@ -83,9 +83,9 @@ module matrix
     // *** END SLAVE INTERFACE STUFF ***
 
     // *** BEGIN SLOW SERIAL CLOCK STUFF ***
-    localparam        SERIAL_CLOCK_COUNTER_BITS_FAST = 6;
-    localparam        SERIAL_CLOCK_COUNTER_BITS_MEDIUM = 14;
-    localparam        SERIAL_CLOCK_COUNTER_BITS_SLOW = 18;
+    localparam        SERIAL_CLOCK_COUNTER_BITS_FAST = 4;
+    localparam        SERIAL_CLOCK_COUNTER_BITS_MEDIUM = 12;
+    localparam        SERIAL_CLOCK_COUNTER_BITS_SLOW = 16;
 
     logic [SERIAL_CLOCK_COUNTER_BITS_SLOW-1:0] r_counter;
     logic                                      r_serial_clk;
