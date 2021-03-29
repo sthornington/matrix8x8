@@ -76,7 +76,7 @@ module top
        );
 
     // TODO: WHY WON"T THIS WORK AT 100MHZ?
-    assign clk = clocks[2];
+    assign clk = clocks[0];
 //    assign clk = clk_25mhz;
 
     // matrix is a wishbone slave, 4 bytes x 8 addresses. byte select supported.
