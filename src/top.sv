@@ -107,6 +107,7 @@ module top
     // END DEBOUNCE RESET
 
     /* why do we need noprune here? */
+
     matrix matrix_0
       (
        .clk(clk),
@@ -125,6 +126,7 @@ module top
        .o_wb_stall(wb_stall),
        .o_wb_rdata(wb_rdata)
        ); /* synthesis syn_noprune=1 */
+
 
     wire             db_btn6;
 
