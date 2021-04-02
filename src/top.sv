@@ -65,8 +65,8 @@ module top
       #(
         .in_hz(25000000),
         .out0_hz( 50000000), .out0_deg(  0), .out0_tol_hz(0),
-        .out1_hz(100000000), .out1_deg(  0), .out1_tol_hz(0),
-        .out2_hz(150000000), .out2_deg(  0), .out2_tol_hz(0),
+        .out1_hz( 75000000), .out1_deg(  0), .out1_tol_hz(0),
+        .out2_hz(100000000), .out2_deg(  0), .out2_tol_hz(0),
         .out3_hz(200000000), .out3_deg(  0), .out3_tol_hz(0)
         )
     ecp5pll_inst

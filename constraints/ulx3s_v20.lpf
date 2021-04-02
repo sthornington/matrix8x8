@@ -9,8 +9,8 @@ FREQUENCY PORT "clk_25mhz" 25 MHZ;
 
 FREQUENCY PORT "ecp5pll_inst.clk_i" 25 MHZ;
 FREQUENCY PORT "clocks[0]" 50 MHZ;
-FREQUENCY PORT "clocks[1]" 100 MHZ;
-FREQUENCY PORT "clocks[2]" 150 MHZ;
+FREQUENCY PORT "clocks[1]" 75 MHZ;
+FREQUENCY PORT "clocks[2]" 100 MHZ;
 FREQUENCY PORT "clocks[3]" 200 MHZ;
 
 # JTAG and SPI FLASH voltage 3.3V and options to boot from SPI flash
