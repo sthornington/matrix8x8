@@ -45,7 +45,7 @@ module matrix
     // handling the main read/write operations.
     always_ff @(posedge clk) begin
         r_ack <= 1'b0;
-        if (i_wb_stb && !o_wb_stall) begin
+        if (i_wb_cyc && i_wb_stb && !o_wb_stall) begin
             // do them alternately here to save the second BRAM port for the matrix
             if (i_wb_we) begin
                 // handle the byte-select here
