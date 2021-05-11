@@ -51,6 +51,8 @@ module matrix
                 // handle the byte-select here
                 for (i=0; i < WB_SEL_WIDTH; i=i+1)
                   if (i_wb_sel[i])
+                    // OLD METHOD, diamond does not like this
+                    // memory[i_wb_addr][(i*8)+7:i*8] <= i_wb_wdata[(i*8)+7:i*8];
                     // use bit-select to avoid diamond error about non-constant range bounds
                     for (j=0;j<8;j++)
                       memory[i_wb_addr][i*8+j] <= i_wb_wdata[i*8+j];
@@ -64,6 +66,7 @@ module matrix
         end
         if (reset) begin
             // hardcode a test pattern
+/*
             memory[0] <= 32'h12345671;
             memory[1] <= 32'h23456712;
             memory[2] <= 32'h34567123;
@@ -72,6 +75,15 @@ module matrix
             memory[5] <= 32'h67123456;
             memory[6] <= 32'h71234567;
             memory[7] <= 32'h12345671;
+*/
+            memory[0] <= 32'hff00ff00;
+            memory[1] <= 32'h00ff00ff;
+            memory[2] <= 32'hff00ff00;
+            memory[3] <= 32'h00ff00ff;
+            memory[4] <= 32'hff00ff00;
+            memory[5] <= 32'h00ff00ff;
+            memory[6] <= 32'hff00ff00;
+            memory[7] <= 32'h00ff00ff;
             r_rdata <= 0;
             r_ack <= 1'b0;
         end
@@ -209,6 +221,7 @@ module matrix
     logic        current_green;
 
 
+
     always_comb begin
         current_word = memory[r_row_num];
         current_nibble = (current_word >> 4*(7-r_col_num)) & 4'hf;
@@ -283,7 +296,8 @@ module matrix
         if (reset) begin
             r_state <= RESET;
             r_prev_state <= RESET;
-            r_matrix_mosi <= 1'b1;
+// If you uncomment this line, it fails in Yosys+nextpnr above 50MHz!
+//            r_matrix_mosi <= 1'b1;
             r_col_num <= 0;
             r_row_num <= 0;
             r_refresh_counter <= 0;

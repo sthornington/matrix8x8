@@ -22,7 +22,7 @@ VERILOG_FILES = \
 YOSYS_OPTIONS = -abc9 -noflatten
 #YOSYS_OPTIONS = -abc9
 #NEXTPNR_OPTIONS = --timing-allow-fail --routed-svg arg
-NEXTPNR_OPTIONS =
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 include trellis_path.mk
 include trellis_main.mk

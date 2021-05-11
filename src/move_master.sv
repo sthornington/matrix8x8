@@ -40,7 +40,7 @@ module move_master
     reg [3:0]                         r_load_num = 0;
 
     always_ff @(posedge clk) begin
-        if (beat && r_row == 7)
+        if (i_wb_ack && r_row == 7)
             r_loading <= 0;
 
         if (i_change && !r_change) begin
@@ -110,14 +110,26 @@ module move_master
         endcase
     end
 
+    reg r_waiting_for_beat = 1;
+    reg r_waiting_for_ack = 0;
+
+
     // state machine for bus master
-    // TODO: ignore acks for now!
     always_ff @(posedge clk) begin
-        if (beat) begin
+        if (r_waiting_for_beat && beat) begin
+            r_waiting_for_beat <= 0;
+            r_waiting_for_ack <= 1;
+        end
+        else if (r_waiting_for_ack && i_wb_ack) begin
+            r_waiting_for_ack <= 0;
+            r_waiting_for_beat <= 1;
             r_row <= r_row + 1;
         end
-        if (reset)
-          r_row <= 0;
+        if (reset) begin
+            r_waiting_for_beat <= 1;
+            r_waiting_for_ack <= 0;
+            r_row <= 0;
+        end
     end
 
     assign o_wb_sel = ~0;
